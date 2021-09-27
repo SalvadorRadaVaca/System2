@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS v5.0.2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"  integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  </head>
+  <body>
+
+    <br/>
+    <div class="container">
+        <div class="row">
+            <div class="col-5">
+                <div class="card">
+                    <div class="card-header">
+                        Backpack
+                    </div>
+                    <div class="card-body">
+                        <form action="" method="post">
+                            <div class="mb-3">
+                              <label for="txtID" class="form-label">ID</label>
+                              <input readonly type="text" class="form-control" name="txtID" id="txtID" placeholder="ID">
+                            </div>
+                            <div class="mb-3">
+                              <label for="txtName" class="form-label">Name</label>
+                              <input type="text" class="form-control" name="txtName" id="txtName" placeholder="Backpack name">
+                            </div>
+                            <div class="mb-3">
+                              <label for="txtPrice" class="form-label">Price</label>
+                              <input type="number" class="form-control" name="txtPrice" id="txtPrice" placeholder="Backpack price">
+                            </div>
+                            <div class="btn-group" role="group" aria-label="">
+                                <button id="addBtn" type="button" class="btn btn-success">Add</button>
+                                <button id="editBtn" type="button" onclick="_edit()" class="btn btn-warning disabled">Edit</button>
+                                <button id="cancelBtn" type="button" onclick="clieanFields()" class="btn btn-primary disabled">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-7">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registers">
+                        <tr>
+                            <td>1</td>
+                            <td>Backpack 1</td>
+                            <td>300</td>
+                            <td>Select|Delete</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        $('#addBtn').click(function(e) {
+            insert();
+        });
+
+        function insert() {
+            var data = new FormData();
+
+            data.append('name', $('#txtName').val());
+            data.append('price', $('#txtPrice').val());
+
+            console.log(data.get('name'));
+            console.log(data.get('price'));
+
+            $.ajax({
+                type: "post",
+                url: "index.php?action=insert",
+                data: data,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    console.log(response);
+                    consultData();
+                    clieanFields();
+                }
+            });
+        }
+
+        function consultData() {
+            $("#registers").empty();
+            $.getJSON("index.php", function (registers) {
+                var backpacks = [];
+                $.each(registers, function(key, value) {
+                    if(key >= 0) {
+                        var template = "<tr>";
+                            template += "<td>"+value.id+"</td>";
+                            template += "<td>"+value.name+"</td>";
+                            template += "<td>"+value.price+"</td>";
+                            template += '<td> <input class="btn btn-info" type="button" onclick="_select('+value.id+')" value="Select" /> ';
+                            template += '<input class="btn btn-danger" type="button" onclick="_delete('+value.id+')" value="Delete" /> </td>';
+                        template += "</tr>";
+
+                        backpacks.push(template);
+                    }
+                });
+                $("#registers").append(backpacks.join(""))
+                console.log(registers);
+            });
+        }
+
+        consultData();
+
+        function _delete(id) {
+            $.get("index.php?delete="+id, function () {
+                consultData();    
+            });
+        }
+
+        function _select(id) {
+            $.getJSON("index.php?consult="+id, function (registers) {
+                console.log(registers);
+                $('#txtID').val(registers[0]['id']);
+                $('#txtName').val(registers[0]['name']);
+                $('#txtPrice').val(registers[0]['price']);
+
+                $('#addBtn').addClass('disabled');
+                $('#editBtn').removeClass('disabled');
+                $('#cancelBtn').removeClass('disabled');
+            });
+        }
+
+        function _edit() {
+            var data = new FormData();
+
+            data.append('id', $('#txtID').val());
+            data.append('name', $('#txtName').val());
+            data.append('price', $('#txtPrice').val());
+
+            $.ajax({
+                type: "post",
+                url: "index.php?update=1",
+                data: data,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    console.log(response);
+                    consultData();
+                    clieanFields();
+                }
+            });
+        }
+
+        function clieanFields() {
+            $('#txtID').val("");
+            $('#txtName').val("");
+            $('#txtPrice').val("");
+
+            $('#addBtn').removeClass('disabled');
+            $('#editBtn').addClass('disabled');
+            $('#cancelBtn').addClass('disabled');
+        }
+    </script>
+      
+    <!-- Bootstrap JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+  </body>
+</html>
